@@ -19,14 +19,15 @@ The tangency portfolio (the portfolio with highest sharpe ratio)
 
 def main():
 
-    #step1: pull the stock price data
-    print("ciao")
+    #pull the stock price data
     start = datetime(2017, 12, 31)
     end = datetime.now()
 
     #import data
     df = data.DataReader(['AAPL', 'FB', 'GOOGL', 'AMZN', 'MSFT'], 'yahoo', start, end)
+    df2 = data.DataReader(['sp500'], 'fred', start, end)
 
+    print("df2:",df2)
     print(df)
 
     #get closing price
@@ -79,9 +80,13 @@ def main():
     print("individual expected return:\n", ind_er)
 
     #now, to compute the portfolio expected return we need to multiply each return for its weight
+    #but we will do it later on once we have got the optimal
 
-    #todo: var del portafoglio servono i pesi
-    #todo: portfolio expected returns (da fare entrambe con optimal weights)!!!
+    # Creating a table for visualising returns and volatility of individual assets
+    assets = pd.concat([ind_er, ann_sd], axis=1)
+    assets.columns = ['Returns', 'Volatility']
+    print("assets:\n",assets)
+
 
     #Next, to plot the graph of efficient frontier, we need run a loop.
     #In each iteration, the loop considers different weights for assets and calculates the return and volatility
@@ -128,7 +133,7 @@ def main():
     #let's calculate minimum volatility portfolio
     min_vol_port = portfolios.iloc[portfolios['Volatility'].idxmin()]
     # idxmin() gives us the minimum value in the column specified.
-    print("min_vol_port: \n",min_vol_port)
+    print("\nmin_vol_port: \n",min_vol_port)
 
     #minimum volatility is in this portfolio (min_vol_port)
     #now we'll plot this point on the efficient frontier graph
@@ -152,11 +157,24 @@ def main():
     #The optimal risky portfolio is the one with the highest Sharpe ratio (cfr formula)
     #Now we need to define the risk factor in order to find optimal portfolio
 
-    #tangency portfolio
-
-    rf = 0.01  # risk factor
+    rf = 0.00  # risk factor
     optimal_risky_port = portfolios.iloc[((portfolios['Returns'] - rf) / portfolios['Volatility']).idxmax()]
-    print("optimal_risky_port: \n", optimal_risky_port)
+    print("\noptimal_risky_port: \n", optimal_risky_port)
+
+
+    #weighted optimal portfolio's variance
+    weightsDictionary = {'AAPL': optimal_risky_port[2], 'FB': optimal_risky_port[3], 'GOOGL': optimal_risky_port[4],
+                          'AMZN': optimal_risky_port[5], 'MSFT': optimal_risky_port[6]}
+    port_var = cov_matrix.mul(weightsDictionary, axis=0).mul(weightsDictionary, axis=1).sum().sum()
+    print("\noptimal portfolio's variance: \n",port_var)
+
+    #optimal portfolio expected returns
+    weightsArray = [optimal_risky_port[2], optimal_risky_port[3], optimal_risky_port[4],
+                         optimal_risky_port[5], optimal_risky_port[6]]
+    port_er = (weightsArray*ind_er).sum()
+    print("portfolio expected returns: \n", port_er)
+
+
 
     # Plotting optimal portfolio
     plt.subplots(figsize=(10, 10))
@@ -164,8 +182,6 @@ def main():
     plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
     plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
     plt.show()
-
-
 
 
 
