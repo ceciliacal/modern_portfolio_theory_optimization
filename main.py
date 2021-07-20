@@ -1,11 +1,12 @@
 from datetime import datetime
 
+import matplotlib
 import numpy as np
 import pandas as pd
 import pandas
 from pandas_datareader import data
 import matplotlib.pyplot as plt
-#matplotlib inline
+
 
 
 '''
@@ -59,9 +60,13 @@ def main():
     ann_sd = logChange.std().apply(lambda x: x * np.sqrt(250))
     print("annual sd:\n", ann_sd)
 
+    # covariance and correlation matrix to understand how different assets behave with respect to each other
+
     #covariance
     cov_matrix = logChange.cov()
     print("covariance matrix:\n", cov_matrix)
+
+    #The covariance between Apple and Apple, or Nike and Nike is the variance of that asset
 
     #correlation
     corr_matrix = logChange.corr()
@@ -74,6 +79,92 @@ def main():
     print("individual expected return:\n", ind_er)
 
     #now, to compute the portfolio expected return we need to multiply each return for its weight
+
+    #todo: var del portafoglio servono i pesi
+    #todo: portfolio expected returns (da fare entrambe con optimal weights)!!!
+
+    #Next, to plot the graph of efficient frontier, we need run a loop.
+    #In each iteration, the loop considers different weights for assets and calculates the return and volatility
+    # of that particular portfolio combination.
+    # We run this loop a 1000 times.
+
+    p_ret = []  # Define an empty array for portfolio returns
+    p_vol = []  # Define an empty array for portfolio volatility
+    p_weights = []  # Define an empty array for asset weights
+
+    num_assets = len(df.columns)
+    num_portfolios = 10000
+
+    for portfolio in range(num_portfolios):
+        weights = np.random.random(num_assets)
+        weights = weights / np.sum(weights)
+        p_weights.append(weights)
+        returns = np.dot(weights, ind_er)  # Returns are the product of individual expected returns of asset and its
+        # weights
+        p_ret.append(returns)
+        var = cov_matrix.mul(weights, axis=0).mul(weights, axis=1).sum().sum()  # Portfolio Variance
+        sd = np.sqrt(var)  # Daily standard deviation
+        ann_sd = sd * np.sqrt(250)  # Annual standard deviation = volatility
+        p_vol.append(ann_sd)
+
+    resultData = {'Returns': p_ret, 'Volatility': p_vol}
+
+    for counter, symbol in enumerate(df.columns.tolist()):
+        # print(counter, symbol)
+        resultData[symbol + ' weight'] = [w[counter] for w in p_weights]
+    portfolios = pd.DataFrame(resultData)
+    print("1000 portfolios:\n",portfolios) # Dataframe of the 1000 portfolios created
+
+    #There are a number of portfolios with different weights, returns and volatility
+    #Plotting the returns and volatility from this dataframe will show the efficient frontier for our portfolio.
+
+    #plt.scatter(x='Volatility', y='Returns', marker='o', s=10, alpha=0.3, grid=True, figsize=[10, 10])
+    portfolios.plot.scatter(x='Volatility', y='Returns', marker='o', s=10, alpha=0.3, grid=True, figsize=[10, 10])
+    plt.show()
+
+    #On this graph, we can see the combination of weights that will give all possible combinations:
+    #Minimum volatility (left most point), Maximum returns (top most point) and everything in between
+
+    #let's calculate minimum volatility portfolio
+    min_vol_port = portfolios.iloc[portfolios['Volatility'].idxmin()]
+    # idxmin() gives us the minimum value in the column specified.
+    print("min_vol_port: \n",min_vol_port)
+
+    #minimum volatility is in this portfolio (min_vol_port)
+    #now we'll plot this point on the efficient frontier graph
+
+    # plotting the minimum volatility portfolio
+    plt.subplots(figsize=[10, 10])
+    plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
+    plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
+
+    plt.show()
+
+    '''
+    It is worthwhile to note that any point to the right of efficient frontier boundary is a sup-optimal portfolio.
+    We found the portfolio with minimum volatility, but its return is pretty low
+    Now we want to try to maximize our return, even if it is a tradeoff with some level of risk.
+
+    The question is: how do we find this optimal risky portfolio and finally optimize our portfolio to the maximum?
+    By using a parameter called the Sharpe Ratio.
+    '''
+
+    #The optimal risky portfolio is the one with the highest Sharpe ratio (cfr formula)
+    #Now we need to define the risk factor in order to find optimal portfolio
+
+    #tangency portfolio
+
+    rf = 0.01  # risk factor
+    optimal_risky_port = portfolios.iloc[((portfolios['Returns'] - rf) / portfolios['Volatility']).idxmax()]
+    print("optimal_risky_port: \n", optimal_risky_port)
+
+    # Plotting optimal portfolio
+    plt.subplots(figsize=(10, 10))
+    plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
+    plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
+    plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
+    plt.show()
+
 
 
 
