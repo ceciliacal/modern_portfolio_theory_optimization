@@ -32,6 +32,7 @@ def main():
 
     #get closing price
     df = df['Adj Close']
+    #df = df.pct_change().dropna()
     print(df)
 
     #It is common practice in portfolio optimization to take log of returns for calculations of covariance and correlation.
@@ -91,7 +92,7 @@ def main():
     #Next, to plot the graph of efficient frontier, we need run a loop.
     #In each iteration, the loop considers different weights for assets and calculates the return and volatility
     # of that particular portfolio combination.
-    # We run this loop a 1000 times.
+    # We run this loop a 10000 times.
 
     p_ret = []  # Define an empty array for portfolio returns
     p_vol = []  # Define an empty array for portfolio volatility
@@ -157,7 +158,7 @@ def main():
     #The optimal risky portfolio is the one with the highest Sharpe ratio (cfr formula)
     #Now we need to define the risk factor in order to find optimal portfolio
 
-    rf = 0.00  # risk factor
+    rf = 0.08  # risk factor
     optimal_risky_port = portfolios.iloc[((portfolios['Returns'] - rf) / portfolios['Volatility']).idxmax()]
     print("\noptimal_risky_port: \n", optimal_risky_port)
 
@@ -181,9 +182,45 @@ def main():
     plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
     plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
     plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
+
     plt.show()
 
 
+    '''
+    zr = pd.DataFrame()
+    z2 = np.linspace(portfolios['Returns'].idxmin(), portfolios['Returns'].idxmax(),
+                     50)  # range of expected returns considered
+    m_r = optimal_risky_port[1]  # er of tangent portfolio
+    r = 0  # risk free rate
+
+    for i in range(len(z2)):
+        zr[i] = [(z2[i] - r) / m_r]
+    zr = zr.iloc[0]
+    plt.plot(zr, z2, alpha=1)
+    plt.show()
+    '''
+    # =============
+
+
+
+    cal_x = []
+    cal_y = []
+    a =10
+
+    for er in np.linspace(rf, max(portfolios['Returns'])):
+        #questa è formula "capital market line" NUOVA FRONTIERA EFFICIENTE negli appunti !!!
+        sd = (er -rf)/((optimal_risky_port[0]-rf)/optimal_risky_port[1])
+        cal_x.append(sd)
+        cal_y.append(er)
+
+    # Plotting optimal portfolio
+    plt.subplots(figsize=(10, 10))
+    plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
+    plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
+    plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
+    plt.plot(cal_x, cal_y, color='r')
+
+    plt.show()
 
 
 # Press the green button in the gutter to run the script.
