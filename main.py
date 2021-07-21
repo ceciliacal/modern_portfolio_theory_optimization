@@ -186,32 +186,25 @@ def main():
     plt.show()
 
 
-    '''
-    zr = pd.DataFrame()
-    z2 = np.linspace(portfolios['Returns'].idxmin(), portfolios['Returns'].idxmax(),
-                     50)  # range of expected returns considered
-    m_r = optimal_risky_port[1]  # er of tangent portfolio
-    r = 0  # risk free rate
-
-    for i in range(len(z2)):
-        zr[i] = [(z2[i] - r) / m_r]
-    zr = zr.iloc[0]
-    plt.plot(zr, z2, alpha=1)
-    plt.show()
-    '''
-    # =============
-
-
-
+    #plot capital market line
     cal_x = []
     cal_y = []
-    a =10
+    utility = []
+    a =5
+
+    #utility can be seen as a measure of relative satisfaction of the investments.
+    #investors is risk saver (preferrs high return)
+    #E(R) = expected return of investment
+    #sd = risk of investment
+    #A = measure of risk adversion (higher A, higher risk?)
 
     for er in np.linspace(rf, max(portfolios['Returns'])):
         #questa è formula "capital market line" NUOVA FRONTIERA EFFICIENTE negli appunti !!!
         sd = (er -rf)/((optimal_risky_port[0]-rf)/optimal_risky_port[1])
         cal_x.append(sd)
         cal_y.append(er)
+        calculateUtility = er - .5 * a * (sd ** 2)
+        utility.append(calculateUtility)
 
     # Plotting optimal portfolio
     plt.subplots(figsize=(10, 10))
@@ -219,6 +212,20 @@ def main():
     plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
     plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
     plt.plot(cal_x, cal_y, color='r')
+    plt.show()
+
+    #investor's optimal portfolio
+    data2 = {'utility': utility, 'cal_y': cal_y, 'cal_x': cal_x}
+    cml = pd.DataFrame(data2)
+    investors_port = cml.iloc[cml['utility'].idxmax()]
+
+    plt.subplots(figsize=(10, 10))
+    plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
+    plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
+    plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
+    plt.plot(cal_x, cal_y, color='r')
+    plt.plot(investors_port[2], investors_port[1], 'o', color='b')
+
 
     plt.show()
 
