@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 import matplotlib
 import numpy as np
@@ -16,19 +16,49 @@ The minimum variance portfolio
 The tangency portfolio (the portfolio with highest sharpe ratio)
 '''
 
+def calculateRfMean():
+    datasetPath = './DGS3MO.csv'
+    dataset = pd.read_csv(datasetPath)
+    data = pd.DataFrame(dataset, columns=['DATE', 'DGS3MO'])
+
+    rfValue = data['DGS3MO']
+    countValues = len(data['DGS3MO'])
+    d0 = date(2018, 1, 2)
+    d1 = date(2021, 7, 19)
+    delta = d1 - d0
+    print("delta: ", delta, "    delta.days: ",delta.days )
+    sum = 0
+
+    for i in range(len(data['DGS3MO'])):
+        sum = sum + float(rfValue[i])
+
+    print("SUM: ",sum)
+    print("countValues: ", countValues)
+    avgRf = sum/delta.days
+    return avgRf
+
 
 def main():
 
     #pull the stock price data
     start = datetime(2017, 12, 31)
-    end = datetime.now()
+    end = datetime(2019, 7, 19)
+
+    avgRf = calculateRfMean()
+    print("calculated avg Rf in a period from 2018-01-01 to 2021-07-19: ",avgRf)
 
     #import data
     df = data.DataReader(['AAPL', 'FB', 'GOOGL', 'AMZN', 'MSFT'], 'yahoo', start, end)
-    df2 = data.DataReader(['sp500'], 'fred', start, end)
-
-    print("df2:",df2)
     print(df)
+
+    '''
+    TSLA (Automobile Manufacturers)
+    Johnson&Johnson (pharmaceuticals)
+    mastercard (Data Processing & Outsourced Services)
+    The Walt Disney Company (Movies & Entertainment)
+    American Airlines Group (Airlines)
+    '''
+
 
     #get closing price
     df = df['Adj Close']
@@ -159,8 +189,17 @@ def main():
     #Now we need to define the risk factor in order to find optimal portfolio
 
     rf = 0.08  # risk factor
+    #rf = avgRf
     optimal_risky_port = portfolios.iloc[((portfolios['Returns'] - rf) / portfolios['Volatility']).idxmax()]
     print("\noptimal_risky_port: \n", optimal_risky_port)
+
+    # Plotting optimal portfolio
+    plt.subplots(figsize=(10, 10))
+    plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
+    plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
+    plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
+
+    plt.show()
 
 
     #weighted optimal portfolio's variance
@@ -177,20 +216,11 @@ def main():
 
 
 
-    # Plotting optimal portfolio
-    plt.subplots(figsize=(10, 10))
-    plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
-    plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
-    plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
-
-    plt.show()
-
-
     #plot capital market line
     cal_x = []
     cal_y = []
     utility = []
-    a =5
+    a = 5
 
     #utility can be seen as a measure of relative satisfaction of the investments.
     #investors is risk saver (preferrs high return)
