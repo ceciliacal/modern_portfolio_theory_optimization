@@ -8,6 +8,8 @@ from pandas_datareader import data
 import matplotlib.pyplot as plt
 
 
+dataset = "sp500"
+#dataset = "yf"
 
 '''
 Next lets look at the portfolios that matter the most.
@@ -26,15 +28,16 @@ def calculateRfMean():
     d0 = date(2018, 1, 2)
     d1 = date(2021, 7, 19)
     delta = d1 - d0
-    print("delta: ", delta, "    delta.days: ",delta.days )
+    #print("delta: ", delta, "    delta.days: ",delta.days )
     sum = 0
 
     for i in range(len(data['DGS3MO'])):
         sum = sum + float(rfValue[i])
 
-    print("SUM: ",sum)
-    print("countValues: ", countValues)
+    #print("SUM: ",sum)
+    #print("countValues: ", countValues)
     avgRf = sum/delta.days
+    #print("avgRf in: ", avgRf)
     return avgRf
 
 
@@ -44,20 +47,33 @@ def main():
     start = datetime(2017, 12, 31)
     end = datetime(2019, 7, 19)
 
-    avgRf = calculateRfMean()
+    #calculus of mean risk-free rate from 'start' to 'end' date
+    avgRfRes = calculateRfMean()
+    #print("avgRfRes", avgRfRes)
+    avgRfDecimal = avgRfRes / 10
+    #print("avgRfDecimal", avgRfDecimal)
+    avgRfDecimal_str = str(avgRfDecimal)[ 0 : 5 ]
+
+    #print("avgRfDecimal_str", avgRfDecimal_str)
+
+    avgRf = float(avgRfDecimal_str)
     print("calculated avg Rf in a period from 2018-01-01 to 2021-07-19: ",avgRf)
 
     #import data
-    df = data.DataReader(['AAPL', 'FB', 'GOOGL', 'AMZN', 'MSFT'], 'yahoo', start, end)
-    print(df)
 
-    '''
-    TSLA (Automobile Manufacturers)
-    Johnson&Johnson (pharmaceuticals)
-    mastercard (Data Processing & Outsourced Services)
-    The Walt Disney Company (Movies & Entertainment)
-    American Airlines Group (Airlines)
-    '''
+    if (dataset == "yf"):
+        df = data.DataReader(['AAPL', 'FB', 'GOOGL', 'AMZN', 'MSFT'], 'yahoo', start, end)
+    if (dataset == "sp500"):
+        '''
+            TSLA (Automobile Manufacturers)
+            Johnson&Johnson (pharmaceuticals)
+            mastercard (Data Processing & Outsourced Services)
+            The Walt Disney Company (Movies & Entertainment)
+            American Airlines Group (Airlines)
+        '''
+        df = data.DataReader(['TSLA', 'JNJ', 'MA', 'DIS', 'AAL'], 'yahoo', start, end)
+
+    print(df)
 
 
     #get closing price
@@ -73,20 +89,39 @@ def main():
 
 
     #The variance in prices of stocks of each asset are an important indicator of how volatile this investment will be (how returns can fluctuate).
-    apple = logChange['AAPL']
-    fb = logChange['FB']
-    google = logChange['GOOGL']
-    amazon = logChange['AMZN']
-    microsoft = logChange['MSFT']
+    if (dataset == "yf"):
 
-    var_apple = apple.var()
-    var_fb = fb.var()
-    var_google = google.var()
-    var_amazon = amazon.var()
-    var_microsoft = microsoft.var()
+        apple = logChange['AAPL']
+        fb = logChange['FB']
+        google = logChange['GOOGL']
+        amazon = logChange['AMZN']
+        microsoft = logChange['MSFT']
 
-    print("\nvar_apple:", var_apple,"var_fb:",var_fb,"var_google:",var_google,"var_amazon:",var_amazon,"var_microsoft:",var_microsoft,"\n" )
+        var_apple = apple.var()
+        var_fb = fb.var()
+        var_google = google.var()
+        var_amazon = amazon.var()
+        var_microsoft = microsoft.var()
 
+        print("\nvar_apple:", var_apple, "var_fb:", var_fb, "var_google:", var_google, "var_amazon:", var_amazon,
+              "var_microsoft:", var_microsoft, "\n")
+
+    if (dataset == "sp500"):
+
+        tesla = logChange['TSLA']
+        jj = logChange['JNJ']
+        mastercard = logChange['MA']
+        disney = logChange['DIS']
+        americanAirlines = logChange['AAL']
+
+        var_tesla = tesla.var()
+        var_jj = jj.var()
+        var_mastercard = mastercard.var()
+        var_disney = disney.var()
+        var_americanAirlines = americanAirlines.var()
+
+        print("\nvar_tesla:", var_tesla, "var_jj:", var_jj, "var_mastercard:", var_mastercard, "var_disney:", var_disney,
+              "var_americanAirlines:", var_americanAirlines, "\n")
 
     # Volatility is given by the annual standard deviation. We multiply by 250 because there are 250 trading days/year.
     ann_sd = logChange.std().apply(lambda x: x * np.sqrt(250))
@@ -188,8 +223,8 @@ def main():
     #The optimal risky portfolio is the one with the highest Sharpe ratio (cfr formula)
     #Now we need to define the risk factor in order to find optimal portfolio
 
-    rf = 0.08  # risk factor
-    #rf = avgRf
+    #rf = 0.08  # risk factor
+    rf = avgRf
     optimal_risky_port = portfolios.iloc[((portfolios['Returns'] - rf) / portfolios['Volatility']).idxmax()]
     print("\noptimal_risky_port: \n", optimal_risky_port)
 
@@ -258,6 +293,8 @@ def main():
 
 
     plt.show()
+
+    #todo: istogramma risk&rate return of selected portfolios (tipo link r)
 
 
 # Press the green button in the gutter to run the script.
