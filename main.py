@@ -1,15 +1,12 @@
 from datetime import datetime, date
-
-import matplotlib
 import numpy as np
 import pandas as pd
-import pandas
 from pandas_datareader import data
 import matplotlib.pyplot as plt
 
 
-dataset = "sp500"
-#dataset = "yf"
+#dataset = "sp500"
+dataset = "yf"
 
 '''
 Next lets look at the portfolios that matter the most.
@@ -103,8 +100,8 @@ def main():
         var_amazon = amazon.var()
         var_microsoft = microsoft.var()
 
-        print("\nvar_apple:", var_apple, "var_fb:", var_fb, "var_google:", var_google, "var_amazon:", var_amazon,
-              "var_microsoft:", var_microsoft, "\n")
+        print("\nvar_apple:", var_apple, "\nvar_fb:", var_fb, "\nvar_google:", var_google, "\nvar_amazon:", var_amazon,
+              "\nvar_microsoft:", var_microsoft, "\n")
 
     if (dataset == "sp500"):
 
@@ -120,12 +117,15 @@ def main():
         var_disney = disney.var()
         var_americanAirlines = americanAirlines.var()
 
-        print("\nvar_tesla:", var_tesla, "var_jj:", var_jj, "var_mastercard:", var_mastercard, "var_disney:", var_disney,
-              "var_americanAirlines:", var_americanAirlines, "\n")
+        print("\nvar_tesla:", var_tesla, "\nvar_jj:", var_jj, "\nvar_mastercard:", var_mastercard, "\nvar_disney:", var_disney,
+              "\nvar_americanAirlines:", var_americanAirlines, "\n")
 
     # Volatility is given by the annual standard deviation. We multiply by 250 because there are 250 trading days/year.
     ann_sd = logChange.std().apply(lambda x: x * np.sqrt(250))
     print("annual sd:\n", ann_sd)
+    plt.title('Individual Volatility')
+    ann_sd.plot(kind='bar')
+    plt.show()
 
     # covariance and correlation matrix to understand how different assets behave with respect to each other
 
@@ -144,6 +144,9 @@ def main():
     #individual_expectedReturn
     ind_er = df.resample('Y').last().pct_change().mean()
     print("individual expected return:\n", ind_er)
+    ind_er.plot(kind='bar')
+    plt.title('Individual Expected Returns')
+    plt.show()
 
     #now, to compute the portfolio expected return we need to multiply each return for its weight
     #but we will do it later on once we have got the optimal
@@ -204,6 +207,9 @@ def main():
     #minimum volatility is in this portfolio (min_vol_port)
     #now we'll plot this point on the efficient frontier graph
 
+    # histogram
+    min_vol_port.plot.bar(min_vol_port)
+
     # plotting the minimum volatility portfolio
     plt.subplots(figsize=[10, 10])
     plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
@@ -225,8 +231,12 @@ def main():
 
     #rf = 0.08  # risk factor
     rf = avgRf
+
     optimal_risky_port = portfolios.iloc[((portfolios['Returns'] - rf) / portfolios['Volatility']).idxmax()]
     print("\noptimal_risky_port: \n", optimal_risky_port)
+
+    #histogram
+    optimal_risky_port.plot.bar(optimal_risky_port)
 
     # Plotting optimal portfolio
     plt.subplots(figsize=(10, 10))
@@ -235,19 +245,6 @@ def main():
     plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
 
     plt.show()
-
-
-    #weighted optimal portfolio's variance
-    weightsDictionary = {'AAPL': optimal_risky_port[2], 'FB': optimal_risky_port[3], 'GOOGL': optimal_risky_port[4],
-                          'AMZN': optimal_risky_port[5], 'MSFT': optimal_risky_port[6]}
-    port_var = cov_matrix.mul(weightsDictionary, axis=0).mul(weightsDictionary, axis=1).sum().sum()
-    print("\noptimal portfolio's variance: \n",port_var)
-
-    #optimal portfolio expected returns
-    weightsArray = [optimal_risky_port[2], optimal_risky_port[3], optimal_risky_port[4],
-                         optimal_risky_port[5], optimal_risky_port[6]]
-    port_er = (weightsArray*ind_er).sum()
-    print("portfolio expected returns: \n", port_er)
 
 
 
@@ -264,7 +261,6 @@ def main():
     #A = measure of risk adversion (higher A, higher risk?)
 
     for er in np.linspace(rf, max(portfolios['Returns'])):
-        #questa è formula "capital market line" NUOVA FRONTIERA EFFICIENTE negli appunti !!!
         sd = (er -rf)/((optimal_risky_port[0]-rf)/optimal_risky_port[1])
         cal_x.append(sd)
         cal_y.append(er)
@@ -294,7 +290,6 @@ def main():
 
     plt.show()
 
-    #todo: istogramma risk&rate return of selected portfolios (tipo link r)
 
 
 # Press the green button in the gutter to run the script.
