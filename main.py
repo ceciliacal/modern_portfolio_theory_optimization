@@ -121,7 +121,9 @@ def main():
               "\nvar_americanAirlines:", var_americanAirlines, "\n")
 
     # Volatility is given by the annual standard deviation. We multiply by 250 because there are 250 trading days/year.
-    ann_sd = logChange.std().apply(lambda x: x * np.sqrt(250))
+    #3.5 stands for year unit between 01-01-2018 to 19-07-2021
+    #ann_sd = logChange.std().apply(lambda x: x * np.sqrt(250))
+    ann_sd = logChange.std().apply(lambda x: x * np.sqrt(250*3.5))
     print("annual sd:\n", ann_sd)
     plt.title('Individual Volatility')
     ann_sd.plot(kind='bar')
@@ -178,7 +180,7 @@ def main():
         p_ret.append(returns)
         var = cov_matrix.mul(weights, axis=0).mul(weights, axis=1).sum().sum()  # Portfolio Variance
         sd = np.sqrt(var)  # Daily standard deviation
-        ann_sd = sd * np.sqrt(250)  # Annual standard deviation = volatility
+        ann_sd = sd * np.sqrt(250*3.5)  # Annual standard deviation = volatility
         p_vol.append(ann_sd)
 
     resultData = {'Returns': p_ret, 'Volatility': p_vol}
@@ -252,7 +254,7 @@ def main():
     cal_x = []
     cal_y = []
     utility = []
-    a = 5
+    a = 2
 
     #utility can be seen as a measure of relative satisfaction of the investments.
     #investors is risk saver (preferrs high return)
