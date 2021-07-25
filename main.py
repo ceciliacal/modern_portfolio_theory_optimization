@@ -5,15 +5,9 @@ from pandas_datareader import data
 import matplotlib.pyplot as plt
 
 
-#dataset = "sp500"
-dataset = "yf"
+dataset = "sp500"
+#dataset = "yf"
 
-'''
-Next lets look at the portfolios that matter the most.
-
-The minimum variance portfolio
-The tangency portfolio (the portfolio with highest sharpe ratio)
-'''
 
 def calculateRfMean():
     datasetPath = './DGS3MO.csv'
@@ -144,7 +138,7 @@ def main():
     #expected return (individual)
     #yearly returns for individual companies (argument 'Y' stands for "yearly")
     #individual_expectedReturn
-    ind_er = df.resample('Y').last().pct_change().mean()
+    ind_er = df.resample('Y').last().pct_change().mean()*3.5
     print("individual expected return:\n", ind_er)
     ind_er.plot(kind='bar')
     plt.title('Individual Expected Returns')
@@ -235,7 +229,10 @@ def main():
     rf = avgRf
 
     optimal_risky_port = portfolios.iloc[((portfolios['Returns'] - rf) / portfolios['Volatility']).idxmax()]
+    portfolios.drop(((portfolios['Returns'] - rf) / portfolios['Volatility']).idxmax());
+    optimal_risky_port2 = portfolios.iloc[((portfolios['Returns'] - rf) / portfolios['Volatility']).idxmax()]
     print("\noptimal_risky_port: \n", optimal_risky_port)
+    print("\noptimal_risky_port2: \n", optimal_risky_port2)
 
     #histogram
     optimal_risky_port.plot.bar(optimal_risky_port)
@@ -251,8 +248,8 @@ def main():
 
 
     #plot capital market line
-    cal_x = []
-    cal_y = []
+    cml_x = []
+    cml_y = []
     utility = []
     a = 2
 
@@ -264,8 +261,8 @@ def main():
 
     for er in np.linspace(rf, max(portfolios['Returns'])):
         sd = (er -rf)/((optimal_risky_port[0]-rf)/optimal_risky_port[1])
-        cal_x.append(sd)
-        cal_y.append(er)
+        cml_x.append(sd)
+        cml_y.append(er)
         calculateUtility = er - .5 * a * (sd ** 2)
         utility.append(calculateUtility)
 
@@ -274,11 +271,11 @@ def main():
     plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
     plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
     plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
-    plt.plot(cal_x, cal_y, color='r')
+    plt.plot(cml_x, cml_y, color='r')
     plt.show()
 
     #investor's optimal portfolio
-    data2 = {'utility': utility, 'cal_y': cal_y, 'cal_x': cal_x}
+    data2 = {'utility': utility, 'cml_y': cml_y, 'cml_x': cml_x}
     cml = pd.DataFrame(data2)
     investors_port = cml.iloc[cml['utility'].idxmax()]
 
@@ -286,7 +283,7 @@ def main():
     plt.scatter(portfolios['Volatility'], portfolios['Returns'], marker='o', s=10, alpha=0.3)
     plt.scatter(min_vol_port[1], min_vol_port[0], color='r', marker='*', s=500)
     plt.scatter(optimal_risky_port[1], optimal_risky_port[0], color='g', marker='*', s=500)
-    plt.plot(cal_x, cal_y, color='r')
+    plt.plot(cml_x, cml_y, color='r')
     plt.plot(investors_port[2], investors_port[1], 'o', color='b')
 
 
